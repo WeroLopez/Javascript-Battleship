@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Batalla naval</title>
+    <meta name="author" content="Wero López">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    
+    <h1>Batalla naval</h1>
+    <div class="grande">
+        <div id="izq" class="izq">
+            <div id="radar1" class="radar">
+            </div>
+            <div id="campo1" class="campo">
+            </div>
+        </div>
+        <div class="medio">
+            <div class="medio1">
+                <p id="p"></p>
+            </div>
+            <div class="medio1">
+                <img id="imgBarco" src="images/barco4h.png" width="100%">
+                <p></p>
+                <img id="imgRotar" src="images/flecha.png" onclick="rotar()" width="100%">
+            </div>
+        </div>
+        <div id="der" class="der">
+            <div id="radar2" class="radar">
+            </div>
+            <div id="campo2" class="campo">
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p class="pie">Wero López, 2018 &#9400;</p>
+    </footer>
+    
+    <script>
+        //colores 
+        {
+        var colorBarco = "#f77422";
+        var colorBarco2 = "#c14f07";
+        var colorAgua = "#68a7dd";
+        var colorRadar = "#3f7c36";
+        var colorRadarPicado = "#52b245";
+        var colorNo = "#ff2323";
+        }
+        //variables del tablero
+        {
+        var tam = 11;
+        var letras = ["","A","B","C","D","E","F","G","H","I","J"]
+        var divCampo1 = [];
+        var divCampo2 = [];
+        var divRadar1 = [];
+        var divRadar2 = [];
+        var estadoCampo1 = []; //0=sin pintar/1=pintado/2=muerto
+        var estadoCampo2 = [];
+        var estadoRadar1 = [];
+        var estadoRadar2 = [];
+        for (var i=0; i<tam-1; i++){
+            divCampo1[i] = [];
+            divCampo2[i] = [];
+            divRadar1[i] = [];
+            divRadar2[i] = [];
+            estadoCampo1[i] = [];
+            estadoCampo2[i] = [];
+            estadoRadar1[i] = [];
+            estadoRadar2[i] = [];
+        }
+        }
+        //variables del juego
+        {
+        var acomodando1 = true;
+        var acomodando2 = false;
+        var jugando = false;
+        var turno = Math.floor((Math.random() * 2) + 1);
+        var horizontal = true;
+        var sePuede = true;
+        var numBarcoAPintar = [4,3,3,3,2,2,1,1,0];
+        var sigBarcoAPintar = 0;
+        var posBarcoAPintar = [];
+        var barcosCampo1 = [];
+        var barcosCampo2 = [];
+        }
+        
+        function ponleEvento1(y,x){
+            divCampo1[y][x].onclick = function(){
+                if(acomodando1 && sePuede){
+                    var n = numBarcoAPintar[sigBarcoAPintar];
+                    barcosCampo1[sigBarcoAPintar] = posBarcoAPintar;
+                    for (var i=0; i<n; i++){
+                        var y1 = posBarcoAPintar[i].substring(0,1);
+                        var x1 = posBarcoAPintar[i].substring(2,3);
+                        divCampo1[y1][x1].style.backgroundColor = colorBarco;
+                        estadoCampo1[y1][x1] = 1;
+                    }
+                    sigBarcoAPintar++;
+                    n = numBarcoAPintar[sigBarcoAPintar];
+                    if(n==0){
+                        acomodando1 = false;
+                        acomodando2 = true;
+                        sigBarcoAPintar = 0;
+                        horizontal = true;
+                        document.getElementById("imgBarco").src="images/barco4h.png";
+                        for (var i=0; i<tam-1; i++){
+                            for (var j=0; j<tam-1; j++){
+                                divCampo1[i][j].style.backgroundColor = colorAgua;
+                            }
+                        }
+                    }else{
+                        var vh = horizontal ? "h" : "v";
+                        document.getElementById("imgBarco").src="images/barco"+n+vh+".png";
+                    }
+                }
+            };
+            divCampo1[y][x].onmouseover = function(){
+                if(acomodando1){
+                    var n = numBarcoAPintar[sigBarcoAPintar]-1;
+                    var r = 0;
+                    sePuede = true;
+                    for (var i=0; i<n+1; i++){
+                        if(horizontal){
+                            if((x+n)>(tam-2)){r=(x+n)-(tam-2)};
+                            if(estadoCampo1[y][x+i-r]!=0){
+                                sePuede = false; break;
+                            }
+                        }else{
+                            if((y+n)>(tam-2)){r=(y+n)-(tam-2)};
+                            if(estadoCampo1[y+i-r][x]!=0){
+                                sePuede = false; break;
+                            }
+                        }
+                    }
+                    for (var i=0; i<n+1; i++){
+                        if(horizontal){
+                            if((x+n)>(tam-2)){r=(x+n)-(tam-2)};
+                            if(sePuede){
+                                divCampo1[y][x+i-r].style.backgroundColor = colorBarco;
+                                posBarcoAPintar[i]=y+"-"+(x+i-r);
+                            }else{
+                                divCampo1[y][x+i-r].style.backgroundColor = colorNo;
+                            }
+                        }else{
+                            if((y+n)>(tam-2)){r=(y+n)-(tam-2)};
+                            if(sePuede){
+                                divCampo1[y+i-r][x].style.backgroundColor = colorBarco;
+                                posBarcoAPintar[i]=(y+i-r)+"-"+x;
+                            }else{
+                                divCampo1[y+i-r][x].style.backgroundColor = colorNo;
+                            }
+                        }
+                    }
+                }
+            };
+            divCampo1[y][x].onmouseout = function(){
+                if(acomodando1){
+                    var n = numBarcoAPintar[sigBarcoAPintar]-1;
+                    var r = 0;
+                    for (var i=0; i<n+1; i++){
+                        if(horizontal){
+                            if((x+n)>(tam-2)){r=(x+n)-(tam-2)};
+                            switch(estadoCampo1[y][x+i-r]){
+                                case 0: divCampo1[y][x+i-r].style.backgroundColor = colorAgua;
+                                    break;
+                                case 1: divCampo1[y][x+i-r].style.backgroundColor = colorBarco;
+                                    break;
+                            }
+                        }else{
+                            if((y+n)>(tam-2)){r=(y+n)-(tam-2)};
+                            switch(estadoCampo1[y+i-r][x]){
+                                case 0: divCampo1[y+i-r][x].style.backgroundColor = colorAgua;
+                                    break;
+                                case 1: divCampo1[y+i-r][x].style.backgroundColor = colorBarco;
+                                    break;
+                            }
+                        }
+                    }
+                    sePuede = true;
+                    posBarcoAPintar = [];
+                }
+            };
+        }
+        
+        function rotar(){
+            var n = numBarcoAPintar[sigBarcoAPintar];
+            var vh = horizontal ? "v" : "h";
+            document.getElementById("imgBarco").src="images/barco"+n+vh+".png";
+            horizontal = !horizontal;
+        }
+        
+        /* campo 1 */
+        {
+        var div = document.createElement('div');
+        div.innerHTML = "&nbsp;";
+        div.className = "letra";
+        document.getElementById("campo1").appendChild(div);
+        for (var i=1; i<tam; i++){
+            div = document.createElement('div');
+            div.innerHTML = i;
+            div.className = "letra";
+            document.getElementById("campo1").appendChild(div);
+        }
+        for (var i=1; i<tam; i++){
+            div = document.createElement('div');
+            div.innerHTML = letras[i];
+            div.className = "letra";
+            document.getElementById("campo1").appendChild(div);
+            for (var j=1; j<tam; j++){
+                div = document.createElement('div');
+                var id = (i-1)+"-"+(j-1);
+                div.id = id;
+                div.innerHTML = "&nbsp;";
+                div.className = "cuadro";
+                div.style.backgroundColor = colorAgua;
+                divCampo1[i-1][j-1] = div;
+                estadoCampo1[i-1][j-1] = 0;
+                ponleEvento1((i-1),(j-1));
+                document.getElementById("campo1").appendChild(div);
+            }
+        }
+        }
+        
+        function ponleEvento2(y,x){
+            divCampo2[y][x].onclick = function(){
+                if(acomodando2 && sePuede){
+                    var n = numBarcoAPintar[sigBarcoAPintar];
+                    barcosCampo2[sigBarcoAPintar] = posBarcoAPintar;
+                    for (var i=0; i<n; i++){
+                        var y2 = posBarcoAPintar[i].substring(0,1);
+                        var x2 = posBarcoAPintar[i].substring(2,3);
+                        divCampo2[y2][x2].style.backgroundColor = colorBarco;
+                        estadoCampo2[y2][x2] = 1;
+                    }
+                    sigBarcoAPintar++;
+                    n = numBarcoAPintar[sigBarcoAPintar];
+                    if(n==0){
+                        jugando = true;
+                        acomodando2 = false;
+                        for (var i=0; i<tam-1; i++){
+                            for (var j=0; j<tam-1; j++){
+                                divCampo2[i][j].style.backgroundColor = colorAgua;
+                            }
+                        }
+                        document.getElementById("imgBarco").style.visibility = "hidden";
+                        document.getElementById("imgRotar").style.visibility = "hidden";
+                    }else{
+                        var vh = horizontal ? "h" : "v";
+                        document.getElementById("imgBarco").src="images/barco"+n+vh+".png";
+                    }
+                }
+            };
+            divCampo2[y][x].onmouseover = function(){
+                if(acomodando2){
+                    var n = numBarcoAPintar[sigBarcoAPintar]-1;
+                    var r = 0;
+                    sePuede = true;
+                    for (var i=0; i<n+1; i++){
+                        if(horizontal){
+                            if((x+n)>(tam-2)){r=(x+n)-(tam-2)};
+                            if(estadoCampo2[y][x+i-r]!=0){
+                                sePuede = false; break;
+                            }
+                        }else{
+                            if((y+n)>(tam-2)){r=(y+n)-(tam-2)};
+                            if(estadoCampo2[y+i-r][x]!=0){
+                                sePuede = false; break;
+                            }
+                        }
+                    }
+                    for (var i=0; i<n+1; i++){
+                        if(horizontal){
+                            if((x+n)>(tam-2)){r=(x+n)-(tam-2)};
+                            if(sePuede){
+                                divCampo2[y][x+i-r].style.backgroundColor = colorBarco;
+                                posBarcoAPintar[i]=y+"-"+(x+i-r);
+                            }else{
+                                divCampo2[y][x+i-r].style.backgroundColor = colorNo;
+                            }
+                        }else{
+                            if((y+n)>(tam-2)){r=(y+n)-(tam-2)};
+                            if(sePuede){
+                                divCampo2[y+i-r][x].style.backgroundColor = colorBarco;
+                                posBarcoAPintar[i]=(y+i-r)+"-"+x;
+                            }else{
+                                divCampo2[y+i-r][x].style.backgroundColor = colorNo;
+                            }
+                        }
+                    }
+                }
+            };
+            divCampo2[y][x].onmouseout = function(){
+                if(acomodando2){
+                    var n = numBarcoAPintar[sigBarcoAPintar]-1;
+                    var r = 0;
+                    for (var i=0; i<n+1; i++){
+                        if(horizontal){
+                            if((x+n)>(tam-2)){r=(x+n)-(tam-2)};
+                            switch(estadoCampo2[y][x+i-r]){
+                                case 0: divCampo2[y][x+i-r].style.backgroundColor = colorAgua;
+                                    break;
+                                case 1: divCampo2[y][x+i-r].style.backgroundColor = colorBarco;
+                                    break;
+                            }
+                        }else{
+                            if((y+n)>(tam-2)){r=(y+n)-(tam-2)};
+                            switch(estadoCampo2[y+i-r][x]){
+                                case 0: divCampo2[y+i-r][x].style.backgroundColor = colorAgua;
+                                    break;
+                                case 1: divCampo2[y+i-r][x].style.backgroundColor = colorBarco;
+                                    break;
+                            }
+                        }
+                    }
+                    sePuede = true;
+                    posBarcoAPintar = [];
+                }
+            };
+        }
+        
+        /* campo 2 */
+        {
+        var div = document.createElement('div');
+        div.innerHTML = "&nbsp;";
+        div.className = "letra";
+        document.getElementById("campo2").appendChild(div);
+        for (var i=1; i<tam; i++){
+            div = document.createElement('div');
+            div.innerHTML = i;
+            div.className = "letra";
+            document.getElementById("campo2").appendChild(div);
+        }
+        for (var i=1; i<tam; i++){
+            div = document.createElement('div');
+            div.innerHTML = letras[i];
+            div.className = "letra";
+            document.getElementById("campo2").appendChild(div);
+            for (var j=1; j<tam; j++){
+                div = document.createElement('div');
+                var id = (i-1)+"-"+(j-1);
+                div.id = id;
+                div.innerHTML = "&nbsp;";
+                div.className = "cuadro";
+                div.style.backgroundColor = colorAgua;
+                divCampo2[i-1][j-1] = div;
+                estadoCampo2[i-1][j-1] = 0;
+                ponleEvento2((i-1),(j-1));
+                document.getElementById("campo2").appendChild(div);
+            }
+        }
+        }
+        
+        /* radar 1 */
+        {
+        var div = document.createElement('div');
+        div.innerHTML = "&nbsp;";
+        div.className = "letra";
+        document.getElementById("radar1").appendChild(div);
+        for (var i=1; i<tam; i++){
+            div = document.createElement('div');
+            div.innerHTML = i;
+            div.className = "letra";
+            document.getElementById("radar1").appendChild(div);
+        }
+        for (var i=1; i<tam; i++){
+            div = document.createElement('div');
+            div.innerHTML = letras[i];
+            div.className = "letra";
+            document.getElementById("radar1").appendChild(div);
+            for (var j=1; j<tam; j++){
+                div = document.createElement('div');
+                var id = (i-1)+"-"+(j-1);
+                div.id = id;
+                div.innerHTML = "&nbsp;";
+                div.className = "cuadro";
+                div.style.backgroundColor = colorRadar;
+                divRadar1[i-1][j-1] = div;
+                estadoRadar1[i-1][j-1] = 0;
+                ponleEventoRadar1((i-1),(j-1));
+                document.getElementById("radar1").appendChild(div);
+            }
+        }
+        }
+        
+        function loHundiste(y,x,radar){
+            var barco = -1;
+            var yb = -1;
+            var xb = -1;
+            switch(radar){
+                case 1: 
+                    for (var i=0; i<barcosCampo2.length; i++){
+                        console.log("cual: "+radar+" "+i);
+                        for (var j=0; j<barcosCampo2[i].length; j++){
+                            yb = barcosCampo2[i][j].substring(0,1);
+                            xb = barcosCampo2[i][j].substring(2,3);
+                            console.log("x: "+x+" y: "+y+" | xb: "+xb+" yb: "+yb);
+                            if(x==xb && y==yb){
+                                barco = i;
+                                console.log("barco: "+radar+" "+barco);
+                                for (var k=0; k<barcosCampo2[i].length; k++){
+                                    yb = barcosCampo2[i][k].substring(0,1);
+                                    xb = barcosCampo2[i][k].substring(2,3);
+                                    if(estadoCampo2[yb][xb] != 2){
+                                        console.log("return: "+radar+" "+barco);
+                                        console.log("-------------------------");
+                                        return -1;
+                                    }
+                                }
+                                return i;
+                            }
+                        }
+                    }
+                    break;
+                case 2: 
+                    for (var i=0; i<barcosCampo1.length; i++){
+                        console.log("cual: "+radar+" "+i);
+                        for (var j=0; j<barcosCampo1[i].length; j++){
+                            yb = barcosCampo1[i][j].substring(0,1);
+                            xb = barcosCampo1[i][j].substring(2,3);
+                            console.log("x: "+x+" y: "+y+" | xb: "+xb+" yb: "+yb);
+                            if(x==xb && y==yb){
+                                barco = i;
+                                console.log("barco: "+radar+" "+barco);
+                                for (var k=0; k<barcosCampo1[i].length; k++){
+                                    yb = barcosCampo1[i][k].substring(0,1);
+                                    xb = barcosCampo1[i][k].substring(2,3);
+                                    if(estadoCampo1[yb][xb] != 2){
+                                        console.log("return: "+radar+" "+barco);
+                                        console.log("-------------------------");
+                                        return -1;
+                                    }
+                                }
+                                console.log("-------------------------");
+                                return i;
+                            }
+                        }
+                    }
+                    break
+            }
+            console.log("se fue");
+            console.log("-------------------------");
+            return -2;
+        }
+        
+        function ponleEventoRadar1(y,x){
+            divRadar1[y][x].onclick = function(){
+                if(jugando && turno==1 && estadoRadar1[y][x]==0){
+                    switch(estadoCampo2[y][x]){
+                        case 0:
+                            divRadar1[y][x].style.backgroundColor = colorRadarPicado;
+                            estadoRadar1[y][x] = 1;
+                            break;
+                        case 1:
+                            divRadar1[y][x].style.backgroundColor = colorBarco2;
+                            estadoRadar1[y][x] = 2;
+                            divCampo2[y][x].style.backgroundColor = colorBarco;
+                            estadoCampo2[y][x] = 2;
+                            var barco = loHundiste(y,x,1);
+                            if(barco >= 0){
+                                for (var i=0; i<barcosCampo2[barco].length; i++){
+                                    var yb = barcosCampo2[barco][i].substring(0,1);
+                                    var xb = barcosCampo2[barco][i].substring(2,3);
+                                    divRadar1[yb][xb].style.backgroundColor = colorBarco;
+                                    estadoRadar1[yb][xb] = 3;
+                                }
+                            }
+                            ganador(1);
+                            break;
+                    }
+                    turno = 2;
+                }
+            };
+            divRadar1[y][x].onmouseover = function(){
+                if(jugando && turno==1 && estadoRadar1[y][x]==0){
+                    divRadar1[y][x].style.backgroundColor = colorRadarPicado;
+                }
+            };
+            divRadar1[y][x].onmouseout = function(){
+                if(jugando && turno==1){
+                    switch(estadoRadar1[y][x]){
+                        case 0: divRadar1[y][x].style.backgroundColor = colorRadar;
+                            break;
+                        case 1: divRadar1[y][x].style.backgroundColor = colorRadarPicado;
+                            break;
+                        case 2: divRadar1[y][x].style.backgroundColor = colorBarco2;
+                            break;
+                        case 3: divRadar1[y][x].style.backgroundColor = colorBarco;
+                            break;
+                    }
+                }
+            };
+        }
+        
+        function ponleEventoRadar2(y,x){
+            divRadar2[y][x].onclick = function(){
+                if(jugando && turno==2 && estadoRadar2[y][x]==0){
+                    switch(estadoCampo1[y][x]){
+                        case 0:
+                            divRadar2[y][x].style.backgroundColor = colorRadarPicado;
+                            estadoRadar2[y][x] = 1;
+                            break;
+                        case 1:
+                            divRadar2[y][x].style.backgroundColor = colorBarco2;
+                            estadoRadar2[y][x] = 2;
+                            divCampo1[y][x].style.backgroundColor = colorBarco;
+                            estadoCampo1[y][x] = 2;
+                            var barco = loHundiste(y,x,2);
+                            if(barco == -2){
+                                divRadar2[y][x].style.backgroundColor = colorBarco;
+                                estadoRadar2[y][x] = 2;
+                            }
+                            else if(barco >= 0){
+                                for (var i=0; i<barcosCampo1[barco].length; i++){
+                                    var yb = barcosCampo1[barco][i].substring(0,1);
+                                    var xb = barcosCampo1[barco][i].substring(2,3);
+                                    divRadar2[yb][xb].style.backgroundColor = colorBarco;
+                                    estadoRadar2[yb][xb] = 3;
+                                }
+                            }
+                            ganador(2);
+                            break;
+                    }
+                    turno = 1;
+                }
+            };
+            divRadar2[y][x].onmouseover = function(){
+                if(jugando && turno==2 && estadoRadar2[y][x]==0){
+                    divRadar2[y][x].style.backgroundColor = colorRadarPicado;
+                }
+            };
+            divRadar2[y][x].onmouseout = function(){
+                if(jugando && turno==2){
+                    switch(estadoRadar2[y][x]){
+                        case 0: divRadar2[y][x].style.backgroundColor = colorRadar;
+                            break;
+                        case 1: divRadar2[y][x].style.backgroundColor = colorRadarPicado;
+                            break;
+                        case 2: divRadar2[y][x].style.backgroundColor = colorBarco2;
+                            break;
+                        case 3: divRadar2[y][x].style.backgroundColor = colorBarco;
+                            break;
+                    }
+                }
+            };
+        }
+        
+        function ganador(gano){
+            switch(gano){
+                case 1: 
+                    for(var i=0; i<estadoCampo2.length; i++){
+                        for(var j=0; j<estadoCampo2[i].length; j++){
+                            if(estadoCampo2[i][j]==1){
+                                return;
+                            }
+                        }
+                    }
+                    break;
+                case 2:
+                    for(var i=0; i<estadoCampo1.length; i++){
+                        for(var j=0; j<estadoCampo1[i].length; j++){
+                            if(estadoCampo1[i][j]==1){
+                                return;
+                            }
+                        }
+                    }
+                    break;
+            }
+            jugando = false;
+            var divshtml = ["radar1","campo1","radar2","campo2"];
+            var d;
+            for(var i=0; i<divshtml.length; i++){
+                d = document.getElementById(divshtml[i]);
+                while(d.firstChild){
+                    d.removeChild(d.firstChild);
+                }
+            }
+            for(var i=0; i<22; i++){
+                document.getElementById("radar1").appendChild( document.createElement("BR") );
+                document.getElementById("radar2").appendChild( document.createElement("BR") );
+            }
+            var p1 = document.createElement('p');
+            var p2 = document.createElement('p');
+            p1.className = "letra2";
+            p2.className = "letra2";
+            p1.innerHTML = "P'zaaaaaaadoooooooo!!!!!!1";
+            p2.innerHTML = "Apachurrale F5 pa revanchiar";
+            console.log(gano);
+            switch(gano){
+                case 1:
+                    console.log("1 pesado");
+                    document.getElementById("radar1").appendChild(p1);
+                    document.getElementById("radar2").appendChild(p2);
+                    break;
+                case 2:
+                    console.log("2 pesado");
+                    document.getElementById("radar1").appendChild(p2);
+                    document.getElementById("radar2").appendChild(p1);
+                    break;
+            }
+        }
+        
+        /* radar 2 */
+        {
+        var div = document.createElement('div');
+        div.innerHTML = "&nbsp;";
+        div.className = "letra";
+        document.getElementById("radar2").appendChild(div);
+        for (var i=1; i<tam; i++){
+            div = document.createElement('div');
+            div.innerHTML = i;
+            div.className = "letra";
+            document.getElementById("radar2").appendChild(div);
+        }
+        for (var i=1; i<tam; i++){
+            div = document.createElement('div');
+            div.innerHTML = letras[i];
+            div.className = "letra";
+            document.getElementById("radar2").appendChild(div);
+            for (var j=1; j<tam; j++){
+                div = document.createElement('div');
+                var id = (i-1)+"-"+(j-1);
+                div.id = id;
+                div.innerHTML = "&nbsp;";
+                div.className = "cuadro";
+                div.style.backgroundColor = colorRadar;
+                divRadar2[i-1][j-1] = div;
+                estadoRadar2[i-1][j-1] = 0;
+                ponleEventoRadar2((i-1),(j-1));
+                document.getElementById("radar2").appendChild(div);
+            }
+        }
+        }
+    </script>
+    
+</body>
+
+</html>
